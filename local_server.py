@@ -69,6 +69,7 @@ def handle_mqtt_message(client, userdata, message):
     get_office_settings_and_publish()
     refresh_users()
     body = json.loads(message.payload.decode())
+    print(body)
     the_user = None
     for user in ALL_USERS:
         if user['card'] == body['card']:
