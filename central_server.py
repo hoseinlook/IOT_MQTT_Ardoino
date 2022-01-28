@@ -54,24 +54,6 @@ def check_user_auth() -> bool:
     return True
 
 
-@app.route('/api/office/register', methods=['POST'])
-def register_office():
-    offices = load_from_file(OFFICE_FILE_PATH)
-    now_time = datetime.now()
-    new_office = {
-        "id": len(offices) + 1,
-        "lightsOnTime": f"{now_time.hour}:{now_time.minute}",
-        "lightsOffTime": f"{now_time.hour}:{now_time.minute}",
-    }
-    offices += [new_office]
-    save_to_file(OFFICE_FILE_PATH, offices)
-    return jsonify(
-        {
-            "new_office": new_office
-        }
-    ), 201
-
-
 @app.route('/api/admin/register', methods=['POST'])
 def register_admin():
     body = request.get_json()
@@ -188,6 +170,10 @@ def add_activity():
 
 
 # users endpoints
+# -------------------------------------------------------------
+# -------------------------------------------------------------
+# -------------------------------------------------------------
+# -------------------------------------------------------------
 @app.route('/api/user', methods=['GET'])
 def get_all_users():
     if not check_admin_auth():
@@ -244,6 +230,61 @@ def user_set_light(user_id):
     return jsonify({
         'user': the_user
     }), 200
+
+
+# office endpoints
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+# -------------------------------------------------------------------
+
+
+@app.route('/api/office/register', methods=['POST'])
+def register_office():
+    offices = load_from_file(OFFICE_FILE_PATH)
+    now_time = datetime.now()
+    new_office = {
+        "id": len(offices) + 1,
+        "lightsOnTime": f"{now_time.hour}:{now_time.minute}",
+        "lightsOffTime": f"{now_time.hour}:{now_time.minute}",
+    }
+    offices += [new_office]
+    save_to_file(OFFICE_FILE_PATH, offices)
+    return jsonify(
+        {
+            "new_office": new_office
+        }
+    ), 201
+
+
+@app.route('/api/admin/setlights', methods=['POST'])
+def set_office_settings():
+    if not check_admin_auth():
+        return jsonify({'message': 'auth required'}), 401
+
+    body = request.get_json()
+    if body is None or 'id' not in body or 'lightsOnTime' not in body or 'lightsOffTime' not in body:
+        return jsonify({
+            "message": 'bad body'
+        }), 400
+
+    offices = load_from_file(OFFICE_FILE_PATH)
+
+    for o in offices:
+        if o.get('id') == body.get('id'):
+            o['lightsOnTime'] = body['lightsOnTime']
+            o['lightsOffTime'] = body['lightsOffTime']
+            save_to_file(OFFICE_FILE_PATH, offices)
+
+    return jsonify({'offices': offices}), 200
+
+
+@app.route('/api/office', methods=['GET'])
+def get_office_settings():
+    if not check_admin_auth():
+        return jsonify({'message': 'auth required'}), 401
+
+    return jsonify(load_from_file(OFFICE_FILE_PATH)), 200
 
 
 if __name__ == '__main__':

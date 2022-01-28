@@ -23,7 +23,7 @@ IS_CONNECTED = False
 
 OFFICE_ID = 1
 BASE_ROOM_TOPIC = 'login/rooms'
-CMD_TOPIC = 'cmd/rooms'
+OFFICE_TIME_TOPIC = 'office'
 LIGHT_RESULT_TOPIC = 'light/rooms'
 
 ALL_USERS = []
@@ -35,7 +35,6 @@ def xxx():
     if not IS_CONNECTED:
         print(" CONNECT")
         mqtt.subscribe(f'{BASE_ROOM_TOPIC}/+')
-        mqtt.subscribe(f'{CMD_TOPIC}/+')
         refresh_users()
         print("USERS ")
         pprint(ALL_USERS)
@@ -49,8 +48,25 @@ def refresh_users():
     ALL_USERS = json.loads(response.text)['users']
 
 
+def get_office_settings_and_publish():
+    response = requests.get(url=F"http://{CENTRAL_SERVER_HOST}:{CENTRAL_SERVER_PORT}/api/office",
+                            headers={'API_KEY': LOCAL_SERVER_API_KEY})
+
+    offices = json.loads(response.text)
+    print("OFFICES")
+    print(offices)
+    for o in offices:
+        if o.get('id') == OFFICE_ID:
+            message = {
+                "lightsOffTime": o['lightsOffTime'],
+                "lightsOnTime": o['lightsOnTime']
+            }
+            mqtt.publish(f'{OFFICE_TIME_TOPIC}', payload=json.dumps(message).encode('utf-8'))
+
+
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
+    get_office_settings_and_publish()
     refresh_users()
     body = json.loads(message.payload.decode())
     the_user = None
