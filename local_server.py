@@ -36,17 +36,22 @@ def xxx():
         print(" CONNECT")
         mqtt.subscribe(f'{BASE_ROOM_TOPIC}/+')
         mqtt.subscribe(f'{CMD_TOPIC}/+')
-        response = requests.get(url=F"http://{CENTRAL_SERVER_HOST}:{CENTRAL_SERVER_PORT}/api/user",
-                                headers={'API_KEY': LOCAL_SERVER_API_KEY})
-        global ALL_USERS
-        ALL_USERS = json.loads(response.text)['users']
+        refresh_users()
         print("USERS ")
         pprint(ALL_USERS)
         IS_CONNECTED = True
 
 
+def refresh_users():
+    response = requests.get(url=F"http://{CENTRAL_SERVER_HOST}:{CENTRAL_SERVER_PORT}/api/user",
+                            headers={'API_KEY': LOCAL_SERVER_API_KEY})
+    global ALL_USERS
+    ALL_USERS = json.loads(response.text)['users']
+
+
 @mqtt.on_message()
 def handle_mqtt_message(client, userdata, message):
+    refresh_users()
     body = json.loads(message.payload.decode())
     the_user = None
     for user in ALL_USERS:
