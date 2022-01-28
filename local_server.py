@@ -101,7 +101,9 @@ def handle_mqtt_message(client, userdata, message):
 
     print("ADD activity", response)
 
-    mqtt.publish(f"{LIGHT_RESULT_TOPIC}/{room_id}", payload=the_user['light'])
+    mqtt.publish(f"{LIGHT_RESULT_TOPIC}/{room_id}", payload=json.dumps({
+        "lightMes": the_user['light']
+    }).encode('utf-8'))
 
 
 @app.route('/test', methods=['POST'])
