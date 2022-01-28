@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Flask
 from flask import request, jsonify
 
-from config import STORAGE_PATH, LOCAL_SERVER_API_KEY
+from config import STORAGE_PATH, LOCAL_SERVER_API_KEY, CENTRAL_SERVER_HOST, CENTRAL_SERVER_PORT
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
@@ -188,6 +188,12 @@ def add_activity():
 
 
 # users endpoints
+@app.route('/api/user', methods=['GET'])
+def get_all_users():
+    if not check_admin_auth():
+        return jsonify({"message": "auth failed"}), 401
+    return jsonify({'users': load_from_file(USER_FILE_PATH)}), 200
+
 
 @app.route('/api/user/login', methods=['POST'])
 def user_login():
@@ -241,4 +247,4 @@ def user_set_light(user_id):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host=CENTRAL_SERVER_HOST, port=CENTRAL_SERVER_PORT)

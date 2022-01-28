@@ -3,3 +3,4 @@ venv/
 __py_cache__
 __pycache__
 storage
+test.py
